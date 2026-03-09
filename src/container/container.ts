@@ -11,7 +11,7 @@ import {
 import { constructDependencyMap } from "./checks/constructDependencyMap.ts";
 import { checkSingletonFromNonSingleton } from "./checks/checkSingletonFromNonSingleton.ts";
 
-export type Container<S extends Object> = {
+export type Container<S extends {}> = {
   execute: <R>(consumer: (container: S) => Promise<R>) => Promise<R>;
   resolveDependency<Key extends keyof S & string>(
     key: Key,
@@ -22,8 +22,8 @@ export type Container<S extends Object> = {
   reset: () => Promise<void>;
 };
 
-export const buildContainer = <S extends Object>(
-  declarations: Declarations<S, {}>,
+export const buildContainer = <S extends {}>(
+  declarations: Declarations<S>,
   disableRecursionCheckOnBuild: boolean = false,
 ): Container<S> => {
   const readDeclaration = declarationReader<S>();

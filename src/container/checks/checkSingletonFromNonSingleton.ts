@@ -1,6 +1,6 @@
 import { type DependencyMap } from "./constructDependencyMap.ts";
 
-export const checkSingletonFromNonSingleton = <const S extends Object>(
+export const checkSingletonFromNonSingleton = <const S extends {}>(
   dependencyMap: DependencyMap<S>,
 ) => {
   const deps = Object.keys(dependencyMap);

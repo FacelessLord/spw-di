@@ -12,8 +12,8 @@ export type DependencyMap<S extends {}> = Record<
 >;
 
 export const constructDependencyMap = <const S extends {}>(
-  declarations: Declarations<S, {}>,
-): Record<keyof S & string, DependencyNode<S>> => {
+  declarations: Declarations<S>,
+): DependencyMap<S> => {
   const dependencyMap = {} as Record<keyof S, DependencyNode<S>>;
   const readDeclaration = declarationReader<S>();
 
@@ -24,7 +24,7 @@ export const constructDependencyMap = <const S extends {}>(
     );
     if (!declaration) {
       if (config.required && config.default === undefined) {
-        throw new Error(`Dependency value not defined "${declarationKey}"`);
+        throw new Error(`Dependency value not defined: "${declarationKey}"`);
       }
       dependencyMap[declarationKey] = {
         dependencies: [],

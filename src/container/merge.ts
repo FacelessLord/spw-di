@@ -5,7 +5,7 @@ import {
   type Fixture,
 } from "./fixture.ts";
 
-type DFixture<T extends Object> = {} extends T ? undefined : Fixture<T>;
+type DFixture<T extends {}> = {} extends T ? undefined : Fixture<T>;
 
 export function merge<
   const A extends Object,
@@ -30,6 +30,6 @@ export function merge<
     resultDecls = { ...resultDecls, ...fixture.__decls };
   }
   return createFixture(
-    resultDecls as Declarations<Join<A, B, C, D, E, F, G>, {}>,
+    resultDecls as Declarations<Join<A, B, C, D, E, F, G>>,
   );
 }

@@ -15,7 +15,7 @@ const defaultConfig: Config<never> = {
 };
 
 export const declarationReader =
-  <const S extends Object>() =>
+  <const S extends {}>() =>
   <const Key extends keyof S & string, D extends S[Key] = S[Key]>(
     key: Key,
     declaration: Declaration<D, S>,
@@ -33,7 +33,7 @@ export const declarationReader =
     return { declaration, config: defaultConfig };
   };
 
-export const getConsumerDependencies = <const S extends Object>(
+export const getConsumerDependencies = <const S extends {}>(
   consumer: (
     container: S,
     use: (u: unknown) => Promise<void>,

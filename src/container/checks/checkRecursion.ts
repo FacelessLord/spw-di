@@ -16,7 +16,7 @@ export const checkRecursionInPlace = <
   }
 };
 
-export const checkRecursion = <const S extends Object>(
+export const checkRecursion = <const S extends {}>(
   dependencyMap: DependencyMap<S>,
 ) => {
   const starts = Object.keys(dependencyMap);

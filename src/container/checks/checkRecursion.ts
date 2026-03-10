@@ -19,27 +19,26 @@ export const checkRecursionInPlace = <
 export const checkRecursion = <const S extends {}>(
   dependencyMap: DependencyMap<S>,
 ) => {
-  const starts = Object.keys(dependencyMap);
+  const starts = Object.keys(dependencyMap).sort();
 
-  for (const start of starts) {
-    const path: string[] = [];
-    const stack: (keyof S & string)[][] = [[start]];
-    while (stack.length) {
-      while (stack[stack.length - 1].length) {
-        const current = stack[stack.length - 1].pop()!;
-        if (path.includes(current)) {
-          const recursionPath = path.slice(path.indexOf(current));
-          recursionPath.push(current);
-          throwRecursionDetectedError(current, recursionPath);
-        }
-
-        if (dependencyMap[current].dependencies.length) {
-          path.push(current);
-          stack.push([...dependencyMap[current].dependencies]);
-        }
+  const path: string[] = [];
+  const stack: (keyof S & string)[][] = [starts];
+  while (stack.length) {
+    while (stack[stack.length - 1].length) {
+      const current = stack[stack.length - 1].pop()!;
+      if (path.includes(current)) {
+        const recursionPath = path.slice(path.indexOf(current));
+        recursionPath.push(current);
+        throwRecursionDetectedError(current, recursionPath);
       }
-      stack.pop();
+
+      if (dependencyMap[current].dependencies.length) {
+        path.push(current);
+        stack.push([...dependencyMap[current].dependencies]);
+      }
     }
+    path.pop();
+    stack.pop();
   }
 };
 

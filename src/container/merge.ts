@@ -1,11 +1,10 @@
 import type { Join } from "./types/join.ts";
-import {
-  createFixture,
-  type Declarations,
-  type Fixture,
-} from "./fixture.ts";
+import { createFixture, type Declarations, type Fixture } from "./fixture.ts";
+import type { MockFixture } from "../testing/mockFixture.ts";
 
-type DFixture<T extends {}> = {} extends T ? undefined : Fixture<T>;
+type DFixture<T extends {}> = {} extends T
+  ? undefined
+  : Fixture<T> | MockFixture<T>;
 
 export function merge<
   const A extends Object,
@@ -26,10 +25,21 @@ export function merge<
 ): Fixture<Join<A, B, C, D, E, F, G>> {
   const fixtures = [a, b, c, d, e, f, g].filter(Boolean).map((x) => x!);
   let resultDecls = {};
+  const mockedDeps: string[] = [];
   for (const fixture of fixtures) {
     resultDecls = { ...resultDecls, ...fixture.__decls };
+    if ("__mockedDeps" in fixture) mockedDeps.push(...fixture.__mockedDeps);
   }
-  return createFixture(
+  const fixture = createFixture(
     resultDecls as Declarations<Join<A, B, C, D, E, F, G>>,
   );
+
+  if (mockedDeps.length) {
+    const mockFixture = fixture as MockFixture<Join<A, B, C, D, E, F, G>>;
+    mockFixture.__mockedDeps = mockedDeps as (keyof Join<A, B, C, D, E, F, G> &
+      string)[];
+    return mockFixture;
+  }
+
+  return fixture;
 }

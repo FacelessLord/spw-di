@@ -112,7 +112,7 @@ describe("fixture", () => {
     });
 
     expect(() => fixture.buildContainer()).toThrowError(
-      'Dependency value not defined "a"',
+      'Dependency value not defined: "a"',
     );
   });
 
@@ -135,6 +135,19 @@ describe("fixture", () => {
 
     expect(() => fixture.buildContainer()).toThrowError('Bad declaration "a"');
   });
+  it("stops when declaration throws an error", async () => {
+    const fixture = createFixture<BaseContainer>({
+      a: ({}, use) => {
+        throw new Error("F");
+      },
+      b: bProvider,
+    });
+
+    const container = fixture.buildContainer();
+    await expect(
+      async () => await container.resolveDependency("a"),
+    ).rejects.toThrowError('Error during resolution of "a": F');
+  });
 
   it("resolution does not clear evaluated values", async () => {
     const fixture = createFixture<{
@@ -156,6 +169,22 @@ describe("fixture", () => {
     expect(a).toBe(a);
   });
 
+  it("resolution in execution does not clear evaluated values", async () => {
+    const fixture = createFixture<{
+      a: number;
+      b: number;
+    }>({
+      a: ({}, use) => use(Math.random()),
+      b: ({ a }, use) => use(a),
+    });
+
+    const container = fixture.buildContainer();
+
+    await container.execute(async ({ a, b }) => {
+      expect(a).toBe(b);
+    });
+  });
+
   it("detects recursion", async () => {
     const fixture = createFixture<{ a: number; b: number; c: number }>({
       a: ({ b }, use) => use(b + 1),
@@ -164,7 +193,7 @@ describe("fixture", () => {
     });
 
     expect(() => fixture.buildContainer()).toThrowError(
-      `Recursion detected while resolving "a".\nRecursion path: a->b->c->a`,
+      `Recursion detected while resolving "c".\nRecursion path: c->a->b->c`,
     );
   });
 
@@ -277,7 +306,7 @@ describe("fixture", () => {
     });
 
     expect(() => fixture.buildContainer()).toThrowError(
-      "Singleton from non-singleton detected when resolving \"random\"",
+      'Singleton from non-singleton detected when resolving "random"',
     );
   });
 

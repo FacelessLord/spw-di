@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { getConsumerDependencies } from "../../src/container/fixtureUtils";
+import { ItemController } from "./mocks/itemController";
+import type { ICrudApi } from "./mocks/crudApi";
+import type { Item } from "./mocks/itemApi";
+import type { User } from "./mocks/userApi";
 
 describe("getConsumerDependencies", () => {
   describe("with simple consumer", () => {
@@ -24,6 +28,15 @@ describe("getConsumerDependencies", () => {
         },
       );
       expect(deps).toEqual(["aasfas", "basf"]);
+    });
+    it("works with multiple dep 2", () => {
+      const deps = getConsumerDependencies<{
+        itemApi: ICrudApi<Item>;
+        userApi: ICrudApi<User>;
+      }>(async ({ itemApi, userApi }, use) =>
+        use(new ItemController(itemApi, userApi)),
+      );
+      expect(deps).toEqual(["itemApi", "userApi"]);
     });
   });
   describe("with declaration", () => {

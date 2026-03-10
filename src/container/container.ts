@@ -40,7 +40,7 @@ export const buildContainer = <S extends {}>(
       const dependencies: Partial<S> = {};
       const cleanups: (() => Promise<void>)[] = [];
       for (const dep of consumerDeps) {
-        const disposable = await this.resolveDependency(dep);
+        const disposable = await this.resolveDependency(dep, [], dependencies);
         dependencies[dep] = disposable.value;
         cleanups.push(disposable.dispose);
       }
@@ -61,6 +61,12 @@ export const buildContainer = <S extends {}>(
       intermediateContainer = intermediateContainer ?? {};
       disposes = disposes ?? [];
 
+      if (dependencyKey in intermediateContainer) {
+        return {
+          value: intermediateContainer[dependencyKey]!,
+          dispose: noopAsync,
+        };
+      }
       if (disableRecursionCheckOnBuild)
         checkRecursionInPlace<S, Key>(dependencyKey, resolutionStack);
 
@@ -94,9 +100,11 @@ export const buildContainer = <S extends {}>(
         }
 
         let resolveValue: ((value: S[Key]) => void) | undefined = undefined;
-        const usePromise = new Promise<S[Key]>(
-          (resolve) => (resolveValue = resolve),
-        );
+        let rejectValue: ((e: unknown) => void) | undefined = undefined;
+        const usePromise = new Promise<S[Key]>((resolve, reject) => {
+          resolveValue = resolve;
+          rejectValue = reject;
+        });
 
         let resolveUse: (() => void) | undefined = undefined;
         const use = async (resolvedValue: S[Key]) => {
@@ -104,7 +112,12 @@ export const buildContainer = <S extends {}>(
           return new Promise<void>((resolve) => (resolveUse = resolve));
         };
 
-        const declarationPromise = declaration(intermediateContainer as S, use);
+        const declarationPromise = declaration(
+          intermediateContainer as S,
+          use,
+        ).catch((e) => {
+          rejectValue?.(e);
+        });
 
         return {
           value: await usePromise,
@@ -128,7 +141,18 @@ export const buildContainer = <S extends {}>(
           dispose: noopAsync,
         };
       }
-      return dependencyFactory();
+      try {
+        return await dependencyFactory();
+      } catch (e: unknown) {
+        const errorMessage =
+          e instanceof Object && "message" in e ? " " + e.message : null;
+        throw new Error(
+          `Error during resolution of "${dependencyKey}":` + errorMessage,
+          {
+            cause: e,
+          },
+        );
+      }
     },
     reset: async () => {
       const disposes = singletonDisposes.reverse();

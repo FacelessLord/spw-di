@@ -1,5 +1,10 @@
 import type { Config, Declaration, RawDeclaration } from "./fixture.ts";
 
+export const onlyValue =
+  <T>(t: T): Declaration<T, Object> =>
+  ({}, use) =>
+    use(t);
+
 export const defaultValue = <T>(t: T): Declaration<T, Object> => [
   undefined,
   {
@@ -47,7 +52,7 @@ export const getConsumerDependencies = <const S extends {}>(
   argumentsString = argumentsString.replace("async", "").trim();
 
   if (argumentsString.endsWith("use)")) {
-    argumentsString = argumentsString.replace(",use", "").replace(", use", "");
+    argumentsString = argumentsString.replace(",use)", ")").replace(", use)", ")");
   }
 
   if (!argumentsString.includes("{") && argumentsString.length > 2)
